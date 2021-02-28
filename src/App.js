@@ -31,12 +31,12 @@ class App extends React.Component {
         const cloneData = this.state.data.concat();
         const sort = this.state.sort === 'asc' ? 'desc' : 'asc';
         const data = _.orderBy(cloneData, sortField, sort);
-
         this.setState({data, sort, sortField});
     }
 
-
-
+    onRowSelect = row => (
+        this.setState({row})
+    )
 
     pageChangeHandler = ({selected}) => (
         this.setState({currentPage: selected})
@@ -49,22 +49,23 @@ class App extends React.Component {
 
     getFilteredData(){
         const {data, search} = this.state
-
         if (search == null) {
             return data
-        } else{
-
         }
-        return data.filter(item => {
+        var result = data.filter(item => {
             return item['firstName'].toLowerCase().includes(search.toLowerCase())
-        })
+        });
+        if(!result.length){
+            result = this.state.data
+        }
+        return result
     }
 
     render() {
         const pageSize = 50;
         const filteredData = this.getFilteredData();
         const pageCount = Math.ceil(filteredData.length / pageSize);
-        const displayData = this.getFilteredData();
+        const displayData = _.chunk(filteredData, pageSize)[this.state.currentPage];
         return (
             <div className="container">
                 {
@@ -75,11 +76,12 @@ class App extends React.Component {
                             <Table data={displayData}
                                    onSort={this.onSort}
                                    sort={this.state.sort}
-                                   sortField={this.state.sortField}/>
+                                   sortField={this.state.sortField}
+                                   onRowSelect={this.onRowSelect}/>
                         </React.Fragment>
                 }
                 {
-                    this.state.data.length >= pageSize
+                    this.state.data.length > pageSize
                         ? <ReactPaginate
                             previousLabel={'<'}
                             nextLabel={'>'}
